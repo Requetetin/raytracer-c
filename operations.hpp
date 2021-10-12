@@ -59,9 +59,47 @@ vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 class Material {
     public:
         vec3 diffuse;
+        float albedo;
 
-        Material(vec3 difuso) {
+        Material(vec3 difuso, float albedoo) {
             diffuse = difuso;
+            albedo = albedo;
         }
 
+};
+
+class Intersect {
+    public:
+        float distance;
+        vec3 point;
+        vec3 normal;
+
+        Intersect(float distancia, vec3 punto, vec3 normall) {
+            distance = distancia;
+            point = punto;
+            normal = normall;
+        }
+
+        Intersect() {
+
+        }
+
+        Intersect(float distancia) {
+            distance = distancia;
+        }
+};
+
+class Light {
+    public: 
+        vec3 position;
+        float intensity;
+
+        Light(vec3 posicion, float intensidad) {
+            position = posicion;
+            intensity = intensidad;
+        }
+
+        Light() {
+
+        }
 };

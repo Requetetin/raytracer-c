@@ -15,13 +15,13 @@ class Sphere {
       material = m.diffuse;
     }
 
-    bool rayIntersect(vec3 origin, vec3 direction) {
+    Intersect rayIntersect(vec3 origin, vec3 direction) {
       vec3 L = center - origin;
       float tca = dotProd(L, direction);
       float l = vecLength(L);
       float d2 = pow(l, 2) - pow(tca, 2);
       if (d2 > pow(radius, 2)) {
-        return false;
+        return Intersect(-100000);
       }
 
       float thc = sqrt(pow(radius, 2) - d2);
@@ -34,9 +34,12 @@ class Sphere {
         t0 = t1;
       }
       if (t0 < 0) {
-        return false;
+        return Intersect(-100000);
       }
 
-      return true;
+      vec3 hit = origin + (t0 * direction);
+      vec3 normal = norm(hit - center);
+
+      return Intersect(t0, hit, normal);
     }
 };

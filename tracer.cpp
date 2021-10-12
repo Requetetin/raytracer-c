@@ -24,9 +24,16 @@ byte color[3] = {255, 255, 255};
 
 int width, height;
 float aspectR;
-Material currentMaterial({0, 0, 0});
-Material backgroundMaterial({0, 0, 0});
+float zbuffer = -100000000;
+
+Intersect currentIntersect;
+Material currentMaterial({0, 0, 0}, 0);
+Material backgroundMaterial({0, 0, 0}, 0);
+Light light;
 vector<Sphere> scene;
+
+vec3 light_dir;
+float intensity;
 
 void glVertex(int x, int y){
     framebuffer[y][x][0] = color[2];
@@ -98,9 +105,13 @@ void glInit(int w, int h){
 
 void sceneIntersect(vec3 origin, vec3 direction) {
   for (int i=0; i<scene.size(); i++) {
-    if (scene[i].rayIntersect(origin, direction)) {
-      currentMaterial.diffuse = scene[i].material;
-      return;
+    currentIntersect = scene[i].rayIntersect(origin, direction);
+    if (currentIntersect.distance > -99999) {
+      if (currentIntersect.distance > zbuffer) {
+        zbuffer = currentIntersect.distance;
+        currentMaterial.diffuse = scene[i].material;
+        return;
+      }
     } else {
       currentMaterial.diffuse = backgroundMaterial.diffuse;
     }
@@ -109,6 +120,10 @@ void sceneIntersect(vec3 origin, vec3 direction) {
 
 void castRay(vec3 origin, vec3 direction) {
   sceneIntersect(origin, direction);
+
+  light_dir = norm(light.position - currentIntersect.point);
+  intensity = light.intensity * dotProd(light_dir, currentIntersect.normal);
+
   if (vecLength(currentMaterial.diffuse)) {
     glColor(currentMaterial.diffuse.x, currentMaterial.diffuse.y, currentMaterial.diffuse.z);
   } else {
@@ -136,8 +151,13 @@ void glRender() {
 
 int main() {
   glInit(1000, 1000);
-  Material ivory({100, 100, 80});
-  Material rubber({80, 0, 0});
+
+  light.intensity = 1;
+  light.position = {10, 10, 10};
+
+  Material ivory({100, 100, 80}, 0.9);
+  Material rubber({80, 0, 0}, 0.2);
+
   Sphere s1({0, -1.5, -10}, 1.5, ivory);
   Sphere s2({-2, 1, -12}, 2, rubber);
   Sphere s3({1, 1, -8}, 1.7, rubber);
@@ -147,6 +167,7 @@ int main() {
   scene.push_back(s2);
   scene.push_back(s3);
   scene.push_back(s4);
+
   glRender();
   glFinish();
   cout << "done" << endl;
