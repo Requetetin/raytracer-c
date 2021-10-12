@@ -5,13 +5,14 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "operations.hpp"
+#include "sphere.hpp"
 #define byte uint8_t
 using namespace std;
 using namespace glm;
 
 byte bmpfileheader[14] = {'B', 'M', 0,0,0,0, 0,0,0,0, 54,0,0,0};
 byte bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0};
-byte framebuffer[2160][4096][3];
+byte framebuffer[1000][1000][3];
 
 byte BLACK[3] = {0, 0, 0};
 byte WHITE[3] = {255, 255, 255};
@@ -23,6 +24,9 @@ byte color[3] = {255, 255, 255};
 
 int width, height;
 float aspectR;
+Material currentMaterial({0, 0, 0});
+Material backgroundMaterial({0, 0, 0});
+vector<Sphere> scene;
 
 void glVertex(int x, int y){
     framebuffer[y][x][0] = color[2];
@@ -92,8 +96,24 @@ void glInit(int w, int h){
   glClear();
 }
 
+void sceneIntersect(vec3 origin, vec3 direction) {
+  for (int i=0; i<scene.size(); i++) {
+    if (scene[i].rayIntersect(origin, direction)) {
+      currentMaterial.diffuse = scene[i].material;
+      return;
+    } else {
+      currentMaterial.diffuse = backgroundMaterial.diffuse;
+    }
+  }
+}
+
 void castRay(vec3 origin, vec3 direction) {
-  glColor(0, 0, 255);
+  sceneIntersect(origin, direction);
+  if (vecLength(currentMaterial.diffuse)) {
+    glColor(currentMaterial.diffuse.x, currentMaterial.diffuse.y, currentMaterial.diffuse.z);
+  } else {
+    glColor(0, 0, 0);
+  }
 }
 
 void glRender() {
@@ -104,20 +124,29 @@ void glRender() {
 
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
-      if (rand() % 100 > 50) {
-        float i = (2 * ((x + 0.5) / width) - 1) * factor;
-        float j = 1 - 2 * ((y + 0.5) / height) * angle;
+      float i = (2 * ((x + 0.5) / width) - 1) * factor;
+      float j = 1 - 2 * ((y + 0.5) / height) * angle;
 
-        direction = norm({i, j, -1});
-        castRay({0, 0, 0}, direction);
-        glVertex(x, y);
-      }
+      direction = norm({i, j, -1});
+      castRay({0, 0, 0}, direction);
+      glVertex(x, y);
     }
   }
 }
 
 int main() {
-  glInit(4096, 2160);
+  glInit(1000, 1000);
+  Material ivory({100, 100, 80});
+  Material rubber({80, 0, 0});
+  Sphere s1({0, -1.5, -10}, 1.5, ivory);
+  Sphere s2({-2, 1, -12}, 2, rubber);
+  Sphere s3({1, 1, -8}, 1.7, rubber);
+  Sphere s4({0, 5, -20}, 5, ivory);
+
+  scene.push_back(s1);
+  scene.push_back(s2);
+  scene.push_back(s3);
+  scene.push_back(s4);
   glRender();
   glFinish();
   cout << "done" << endl;

@@ -21,7 +21,7 @@ float dotProd(vec3 v0, vec3 v1) {
 }
 
 float vecLength(vec3 v) {
-    return pow(v.x * v.x + v.y * v.y + v.z * v.z, 0.5);
+    return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 vec3 norm(vec3 v) {
@@ -55,3 +55,13 @@ vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
     float w = 1 - (cross.x + cross.y) / cross.z;
     return {w, v, u};
 }
+
+class Material {
+    public:
+        vec3 diffuse;
+
+        Material(vec3 difuso) {
+            diffuse = difuso;
+        }
+
+};
