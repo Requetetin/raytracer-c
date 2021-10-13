@@ -69,8 +69,23 @@ class Material {
 class Intersect {
     public:
         double distance;
+        vec3 point;
+        vec3 normal;
 
-        Intersect(double distancia) {
+        Intersect(double distancia, vec3 normall, vec3 punto) {
             distance = distancia;
+            normal = normall;
+            point = punto;
+        }
+};
+
+class Light {
+    public:
+        vec3 position;
+        double intensity;
+
+        Light(vec3 posicion, double intensidad) {
+            position = posicion;
+            intensity = intensidad;
         }
 };

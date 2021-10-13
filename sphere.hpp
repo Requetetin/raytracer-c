@@ -21,7 +21,7 @@ class Sphere {
       double l = vecLength(L);
       double d2 = pow(l, 2) - pow(tca, 2);
       if (d2 > pow(radius, 2)) {
-        return Intersect(-10000);
+        return Intersect(-10000, {0, 0, 0}, {0, 0, 0});
       }
 
       double thc = sqrt(pow(radius, 2) - d2);
@@ -34,9 +34,12 @@ class Sphere {
         t0 = t1;
       }
       if (t0 < 0) {
-        return Intersect(-10000);
+        return Intersect(-10000, {0, 0, 0}, {0, 0, 0});
       }
 
-      return Intersect(t0);
+      vec3 hit = origin + (direction * (float)t0);
+      vec3 normal = norm(hit - center);
+
+      return Intersect(t0, normal, hit);
     }
 };

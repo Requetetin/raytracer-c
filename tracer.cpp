@@ -25,10 +25,13 @@ byte color[3] = {255, 255, 255};
 int width, height;
 double aspectR;
 double zbuffer = numeric_limits<double>::infinity();
+Light light({0, 0, 0}, 0);
 Material currentMaterial({0, 0, 0});
 Material backgroundMaterial({0, 0, 0});
-Intersect currentIntersect(0);
+Intersect currentIntersect(0, {0, 0, 0}, {0, 0, 0});
 vector<Sphere> scene;
+
+double intensity;
 
 void glVertex(int x, int y){
     framebuffer[y][x][0] = color[2];
@@ -117,11 +120,18 @@ void sceneIntersect(vec3 origin, vec3 direction) {
 
 void castRay(vec3 origin, vec3 direction) {
   sceneIntersect(origin, direction);
-  if (vecLength(currentMaterial.diffuse)) {
-    glColor(currentMaterial.diffuse.x, currentMaterial.diffuse.y, currentMaterial.diffuse.z);
-  } else {
+
+  if (!vecLength(currentMaterial.diffuse)) {
     glColor(0, 0, 0);
+    return;
   }
+
+  vec3 light_dir = norm(light.position - currentIntersect.point);
+  intensity = light.intensity * std::max(0.f, dot(light_dir, currentIntersect.normal));
+
+  vec3 diffuse = currentMaterial.diffuse * (float)intensity;
+
+  glColor(diffuse.x, diffuse.y, diffuse.z);
 }
 
 void glRender() {
@@ -133,7 +143,7 @@ void glRender() {
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
       double i = (2 * ((x + 0.5) / width) - 1) * factor;
-      double j = 1 - 2 * ((y + 0.5) / height) * angle;
+      double j = (1 - 2 * ((y + 0.5) / height)) * angle;
 
       direction = norm({i, j, -1});
       castRay({0, 0, 0}, direction);
@@ -144,6 +154,10 @@ void glRender() {
 
 int main() {
   glInit(1000, 1000);
+
+  light.position = {10, 10, 10};
+  light.intensity = 1;
+
   Material ivory({100, 100, 80});
   Material rubber({80, 0, 0});
   Sphere s1({0, -1.5, -10}, 1.5, ivory);
