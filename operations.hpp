@@ -59,9 +59,11 @@ vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 class Material {
     public:
         vec3 diffuse;
+        vec4 albedo;
 
-        Material(vec3 difuso) {
+        Material(vec3 difuso, vec4 albedoo) {
             diffuse = difuso;
+            albedo = albedoo;
         }
 
 };
