@@ -23,7 +23,7 @@ byte clearColor[3] = {0, 0, 0};
 byte color[3] = {255, 255, 255};
 
 int width, height;
-float aspectR;
+double aspectR;
 Material currentMaterial({0, 0, 0});
 Material backgroundMaterial({0, 0, 0});
 vector<Sphere> scene;
@@ -117,15 +117,15 @@ void castRay(vec3 origin, vec3 direction) {
 }
 
 void glRender() {
-  float fov = glm::half_pi<float>();
-  float angle = tan(fov/2);
-  float factor = aspectR * angle;
+  double fov = glm::half_pi<double>();
+  double angle = tan(fov/2);
+  double factor = aspectR * angle;
   vec3 direction;
 
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
-      float i = (2 * ((x + 0.5) / width) - 1) * factor;
-      float j = 1 - 2 * ((y + 0.5) / height) * angle;
+      double i = (2 * ((x + 0.5) / width) - 1) * factor;
+      double j = 1 - 2 * ((y + 0.5) / height) * angle;
 
       direction = norm({i, j, -1});
       castRay({0, 0, 0}, direction);
@@ -147,6 +147,8 @@ int main() {
   scene.push_back(s2);
   scene.push_back(s3);
   scene.push_back(s4);
+  
+  
   glRender();
   glFinish();
   cout << "done" << endl;
