@@ -65,3 +65,12 @@ class Material {
         }
 
 };
+
+class Intersect {
+    public:
+        double distance;
+
+        Intersect(double distancia) {
+            distance = distancia;
+        }
+};

@@ -24,8 +24,10 @@ byte color[3] = {255, 255, 255};
 
 int width, height;
 double aspectR;
+double zbuffer = numeric_limits<double>::infinity();
 Material currentMaterial({0, 0, 0});
 Material backgroundMaterial({0, 0, 0});
+Intersect currentIntersect(0);
 vector<Sphere> scene;
 
 void glVertex(int x, int y){
@@ -97,11 +99,17 @@ void glInit(int w, int h){
 }
 
 void sceneIntersect(vec3 origin, vec3 direction) {
+  zbuffer = numeric_limits<double>::infinity();
   for (int i=0; i<scene.size(); i++) {
-    if (scene[i].rayIntersect(origin, direction)) {
-      currentMaterial.diffuse = scene[i].material;
-      return;
-    } else {
+    currentIntersect = scene[i].rayIntersect(origin, direction);
+    if (currentIntersect.distance != -10000) {
+      if (currentIntersect.distance < zbuffer) {
+        zbuffer = currentIntersect.distance;
+        currentMaterial.diffuse = scene[i].material;
+        return;
+      }
+    }
+   else {
       currentMaterial.diffuse = backgroundMaterial.diffuse;
     }
   }
