@@ -56,18 +56,24 @@ vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
     return {w, v, u};
 }
 
+vec3 reflect(vec3 I, vec3 N) {
+    return norm(I - N * 2.f * dot(N, I));
+}
+
 class Material {
     public:
         vec3 diffuse;
         vec4 albedo;
+        double specular;
 
-        Material(vec3 difuso, vec4 albedoo) {
+        Material(vec3 difuso, vec4 albedoo, double specularr) {
             diffuse = difuso;
             albedo = albedoo;
+            specular = specularr;
         }
 
         Material() {
-            
+
         }
 
 };
@@ -89,9 +95,11 @@ class Light {
     public:
         vec3 position;
         double intensity;
+        vec3 color;
 
-        Light(vec3 posicion, double intensidad) {
+        Light(vec3 posicion, double intensidad, vec3 colorr) {
             position = posicion;
             intensity = intensidad;
+            color = colorr;
         }
 };

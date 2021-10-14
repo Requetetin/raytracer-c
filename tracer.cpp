@@ -25,13 +25,14 @@ byte color[3] = {255, 255, 255};
 int width, height;
 double aspectR;
 double zbuffer = numeric_limits<double>::infinity();
-Light light({0, 0, 0}, 0);
-Material currentMaterial({0, 0, 0}, {0, 0, 0, 0});
-Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0});
+Light light({0, 0, 0}, 0, {0, 0, 0});
+Material currentMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
+Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
 Intersect currentIntersect(0, {0, 0, 0}, {0, 0, 0});
 vector<Sphere> scene;
 
-double intensity;
+double diffuseIntensity;
+double specularIntensity;
 
 void glVertex(int x, int y){
     framebuffer[y][x][0] = color[2];
@@ -126,11 +127,16 @@ void castRay(vec3 origin, vec3 direction) {
   }
 
   vec3 light_dir = norm(light.position - currentIntersect.point);
-  intensity = light.intensity * std::max(0.f, dot(light_dir, currentIntersect.normal));
-  
-  vec3 diffuse = currentMaterial.diffuse * (float)intensity * currentMaterial.albedo.x;
+  diffuseIntensity = light.intensity * std::max(0.f, dot(light_dir, currentIntersect.normal));
 
-  glColor(diffuse.x, diffuse.y, diffuse.z);
+  vec3 R = reflect(light_dir, currentIntersect.normal);
+  specularIntensity = light.intensity * pow(std::max(0.f, dot(R, direction)), currentMaterial.specular);
+
+  vec3 diffuse = currentMaterial.diffuse * (float)diffuseIntensity * currentMaterial.albedo.x;
+  vec3 specular = light.color * (float)specularIntensity * currentMaterial.albedo.y;
+
+  vec3 finalColor = diffuse + specular;
+  glColor(finalColor.x, finalColor.y, finalColor.z);
 }
 
 void glRender() {
@@ -156,8 +162,9 @@ int main() {
 
   light.position = {10, 10, 10};
   light.intensity = 1;
-  Material ivory({100, 100, 80}, {0.9, 0, 0, 0});
-  Material rubber({80, 0, 0}, {0.2, 0, 0, 0});
+  light.color = {255, 255, 255};
+  Material ivory({100, 100, 80}, {0.6, 0.3, 0, 0}, 50);
+  Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10);
   Sphere s1({0, -1.5, -10}, 1.5, ivory);
   Sphere s2({-2, 1, -12}, 2, rubber);
   Sphere s3({1, 1, -8}, 1.7, rubber);
