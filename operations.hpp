@@ -66,6 +66,10 @@ class Material {
             albedo = albedoo;
         }
 
+        Material() {
+            
+        }
+
 };
 
 class Intersect {

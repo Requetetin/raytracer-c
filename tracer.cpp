@@ -108,7 +108,7 @@ void sceneIntersect(vec3 origin, vec3 direction) {
     if (currentIntersect.distance != -10000) {
       if (currentIntersect.distance < zbuffer) {
         zbuffer = currentIntersect.distance;
-        currentMaterial.diffuse = scene[i].material;
+        currentMaterial = scene[i].material;
         return;
       }
     }
@@ -120,7 +120,6 @@ void sceneIntersect(vec3 origin, vec3 direction) {
 
 void castRay(vec3 origin, vec3 direction) {
   sceneIntersect(origin, direction);
-
   if (!vecLength(currentMaterial.diffuse)) {
     glColor(0, 0, 0);
     return;
@@ -157,10 +156,8 @@ int main() {
 
   light.position = {10, 10, 10};
   light.intensity = 1;
-  vec4 albedo1 = {0.9, 0, 0, 0};
-  vec4 albedo2 = {0.2, 0, 0, 0};
-  Material ivory({100, 100, 80}, albedo1);
-  Material rubber({80, 0, 0}, albedo2);
+  Material ivory({100, 100, 80}, {0.9, 0, 0, 0});
+  Material rubber({80, 0, 0}, {0.2, 0, 0, 0});
   Sphere s1({0, -1.5, -10}, 1.5, ivory);
   Sphere s2({-2, 1, -12}, 2, rubber);
   Sphere s3({1, 1, -8}, 1.7, rubber);
