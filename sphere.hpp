@@ -14,6 +14,7 @@ class Sphere {
       radius = radio;
       material.diffuse = m.diffuse;
       material.albedo = m.albedo;
+      material.specular = m.specular;
     }
 
     Intersect rayIntersect(vec3 origin, vec3 direction) {

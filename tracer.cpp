@@ -12,7 +12,7 @@ using namespace glm;
 
 byte bmpfileheader[14] = {'B', 'M', 0,0,0,0, 0,0,0,0, 54,0,0,0};
 byte bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0};
-byte framebuffer[1000][1000][3];
+byte framebuffer[4056][4056][3];
 
 byte BLACK[3] = {0, 0, 0};
 byte WHITE[3] = {255, 255, 255};
@@ -31,8 +31,12 @@ Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
 Intersect currentIntersect(0, {0, 0, 0}, {0, 0, 0});
 vector<Sphere> scene;
 
+Intersect shadowIntersect(0, {0, 0, 0}, {0, 0, 0});
+Material shadowMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
+
 double diffuseIntensity;
 double specularIntensity;
+double shadowIntensity;
 
 void glVertex(int x, int y){
     framebuffer[y][x][0] = color[2];
@@ -119,6 +123,23 @@ void sceneIntersect(vec3 origin, vec3 direction) {
   }
 }
 
+void shadowSceneIntersect(vec3 origin, vec3 direction) {
+  zbuffer = numeric_limits<double>::infinity();
+  for (int i=0; i<scene.size(); i++) {
+    shadowIntersect = scene[i].rayIntersect(origin, direction);
+    if (shadowIntersect.distance != -10000) {
+      if (shadowIntersect.distance < zbuffer) {
+        zbuffer = shadowIntersect.distance;
+        shadowMaterial = scene[i].material;
+        return;
+      }
+    }
+   else {
+      shadowMaterial.diffuse = backgroundMaterial.diffuse;
+    }
+  }
+}
+
 void castRay(vec3 origin, vec3 direction) {
   sceneIntersect(origin, direction);
   if (!vecLength(currentMaterial.diffuse)) {
@@ -127,10 +148,30 @@ void castRay(vec3 origin, vec3 direction) {
   }
 
   vec3 light_dir = norm(light.position - currentIntersect.point);
-  diffuseIntensity = light.intensity * std::max(0.f, dot(light_dir, currentIntersect.normal));
 
-  vec3 R = reflect(light_dir, currentIntersect.normal);
-  specularIntensity = light.intensity * pow(std::max(0.f, dot(R, direction)), currentMaterial.specular);
+  vec3 offset_normal = currentIntersect.normal * 1.1f;
+  vec3 shadow_origin;
+  if (dot(light_dir, currentIntersect.normal) > 0) {
+    shadow_origin = currentIntersect.point + offset_normal;
+  } else {
+    shadow_origin = currentIntersect.point - offset_normal;
+  }
+  shadowSceneIntersect(shadow_origin, light_dir);
+
+  if (!vecLength(shadowMaterial.diffuse)) {
+    shadowIntensity = 0;
+  } else {
+    shadowIntensity = 0.9;
+  }
+
+  diffuseIntensity = light.intensity * std::max(0.f, dot(light_dir, currentIntersect.normal)) * (1 - shadowIntensity);
+  
+  if (shadowIntensity > 0) {
+    specularIntensity = 0;
+  } else {
+    vec3 R = reflect(light_dir, currentIntersect.normal);
+    specularIntensity = light.intensity * pow(std::max(0.f, dot(R, direction)), currentMaterial.specular);
+  }
 
   vec3 diffuse = currentMaterial.diffuse * (float)diffuseIntensity * currentMaterial.albedo.x;
   vec3 specular = light.color * (float)specularIntensity * currentMaterial.albedo.y;
@@ -158,7 +199,7 @@ void glRender() {
 }
 
 int main() {
-  glInit(1000, 1000);
+  glInit(4056, 4056);
 
   light.position = {10, 10, 10};
   light.intensity = 1;
