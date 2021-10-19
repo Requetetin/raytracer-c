@@ -12,7 +12,7 @@ using namespace glm;
 
 byte bmpfileheader[14] = {'B', 'M', 0,0,0,0, 0,0,0,0, 54,0,0,0};
 byte bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0};
-byte framebuffer[1000][1000][3];
+byte framebuffer[4056][4056][3];
 
 byte BLACK[3] = {0, 0, 0};
 byte WHITE[3] = {255, 255, 255};
@@ -23,17 +23,20 @@ byte clearColor[3] = {0, 0, 0};
 byte color[3] = {255, 255, 255};
 
 int width, height;
-float aspectR;
-float zbuffer = -100000000;
-
-Intersect currentIntersect;
-Material currentMaterial({0, 0, 0}, 0);
-Material backgroundMaterial({0, 0, 0}, 0);
-Light light;
+double aspectR;
+double zbuffer = numeric_limits<double>::infinity();
+Light light({0, 0, 0}, 0, {0, 0, 0});
+Material currentMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
+Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
+Intersect currentIntersect(0, {0, 0, 0}, {0, 0, 0});
 vector<Sphere> scene;
 
-vec3 light_dir;
-float intensity;
+Intersect shadowIntersect(0, {0, 0, 0}, {0, 0, 0});
+Material shadowMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
+
+double diffuseIntensity;
+double specularIntensity;
+double shadowIntensity;
 
 void glVertex(int x, int y){
     framebuffer[y][x][0] = color[2];
@@ -104,43 +107,89 @@ void glInit(int w, int h){
 }
 
 void sceneIntersect(vec3 origin, vec3 direction) {
+  zbuffer = numeric_limits<double>::infinity();
   for (int i=0; i<scene.size(); i++) {
     currentIntersect = scene[i].rayIntersect(origin, direction);
-    if (currentIntersect.distance > -99999) {
-      if (currentIntersect.distance > zbuffer) {
+    if (currentIntersect.distance != -10000) {
+      if (currentIntersect.distance < zbuffer) {
         zbuffer = currentIntersect.distance;
-        currentMaterial.diffuse = scene[i].material;
+        currentMaterial = scene[i].material;
         return;
       }
-    } else {
+    }
+   else {
       currentMaterial.diffuse = backgroundMaterial.diffuse;
+    }
+  }
+}
+
+void shadowSceneIntersect(vec3 origin, vec3 direction) {
+  zbuffer = numeric_limits<double>::infinity();
+  for (int i=0; i<scene.size(); i++) {
+    shadowIntersect = scene[i].rayIntersect(origin, direction);
+    if (shadowIntersect.distance != -10000) {
+      if (shadowIntersect.distance < zbuffer) {
+        zbuffer = shadowIntersect.distance;
+        shadowMaterial = scene[i].material;
+        return;
+      }
+    }
+   else {
+      shadowMaterial.diffuse = backgroundMaterial.diffuse;
     }
   }
 }
 
 void castRay(vec3 origin, vec3 direction) {
   sceneIntersect(origin, direction);
-
-  light_dir = norm(light.position - currentIntersect.point);
-  intensity = light.intensity * dotProd(light_dir, currentIntersect.normal);
-
-  if (vecLength(currentMaterial.diffuse)) {
-    glColor(currentMaterial.diffuse.x, currentMaterial.diffuse.y, currentMaterial.diffuse.z);
-  } else {
+  if (!vecLength(currentMaterial.diffuse)) {
     glColor(0, 0, 0);
+    return;
   }
+
+  vec3 light_dir = norm(light.position - currentIntersect.point);
+
+  vec3 offset_normal = currentIntersect.normal * 1.1f;
+  vec3 shadow_origin;
+  if (dot(light_dir, currentIntersect.normal) > 0) {
+    shadow_origin = currentIntersect.point + offset_normal;
+  } else {
+    shadow_origin = currentIntersect.point - offset_normal;
+  }
+  shadowSceneIntersect(shadow_origin, light_dir);
+
+  if (!vecLength(shadowMaterial.diffuse)) {
+    shadowIntensity = 0;
+  } else {
+    shadowIntensity = 0.9;
+  }
+
+  diffuseIntensity = light.intensity * std::max(0.f, dot(light_dir, currentIntersect.normal)) * (1 - shadowIntensity);
+  
+  if (shadowIntensity > 0) {
+    specularIntensity = 0;
+  } else {
+    vec3 R = reflect(light_dir, currentIntersect.normal);
+    specularIntensity = light.intensity * pow(std::max(0.f, dot(R, direction)), currentMaterial.specular);
+  }
+
+  vec3 diffuse = currentMaterial.diffuse * (float)diffuseIntensity * currentMaterial.albedo.x;
+  vec3 specular = light.color * (float)specularIntensity * currentMaterial.albedo.y;
+
+  vec3 finalColor = diffuse + specular;
+  glColor(finalColor.x, finalColor.y, finalColor.z);
 }
 
 void glRender() {
-  float fov = glm::half_pi<float>();
-  float angle = tan(fov/2);
-  float factor = aspectR * angle;
+  double fov = glm::half_pi<double>();
+  double angle = tan(fov/2);
+  double factor = aspectR * angle;
   vec3 direction;
 
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
-      float i = (2 * ((x + 0.5) / width) - 1) * factor;
-      float j = 1 - 2 * ((y + 0.5) / height) * angle;
+      double i = (2 * ((x + 0.5) / width) - 1) * factor;
+      double j = (1 - 2 * ((y + 0.5) / height)) * angle;
 
       direction = norm({i, j, -1});
       castRay({0, 0, 0}, direction);
@@ -150,14 +199,13 @@ void glRender() {
 }
 
 int main() {
-  glInit(1000, 1000);
+  glInit(4056, 4056);
 
-  light.intensity = 1;
   light.position = {10, 10, 10};
-
-  Material ivory({100, 100, 80}, 0.9);
-  Material rubber({80, 0, 0}, 0.2);
-
+  light.intensity = 1;
+  light.color = {255, 255, 255};
+  Material ivory({100, 100, 80}, {0.6, 0.3, 0, 0}, 50);
+  Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10);
   Sphere s1({0, -1.5, -10}, 1.5, ivory);
   Sphere s2({-2, 1, -12}, 2, rubber);
   Sphere s3({1, 1, -8}, 1.7, rubber);
@@ -167,7 +215,8 @@ int main() {
   scene.push_back(s2);
   scene.push_back(s3);
   scene.push_back(s4);
-
+  
+  
   glRender();
   glFinish();
   cout << "done" << endl;

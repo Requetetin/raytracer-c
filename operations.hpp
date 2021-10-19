@@ -17,7 +17,7 @@ vec3 crossProd(vec3 v0, vec3 v1) {
 
 float dotProd(vec3 v0, vec3 v1) {
     //cout << to_string(v0) << " and " << to_string(v1) << endl;
-    return v0.x * v1.x + v0.y + v1.y + v0.z * v1.z;
+    return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z;
 }
 
 float vecLength(vec3 v) {
@@ -56,50 +56,50 @@ vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
     return {w, v, u};
 }
 
+vec3 reflect(vec3 I, vec3 N) {
+    return norm(I - N * 2.f * dot(N, I));
+}
+
 class Material {
     public:
         vec3 diffuse;
-        float albedo;
+        vec4 albedo;
+        double specular;
 
-        Material(vec3 difuso, float albedoo) {
+        Material(vec3 difuso, vec4 albedoo, double specularr) {
             diffuse = difuso;
-            albedo = albedo;
+            albedo = albedoo;
+            specular = specularr;
+        }
+
+        Material() {
+
         }
 
 };
 
 class Intersect {
     public:
-        float distance;
+        double distance;
         vec3 point;
         vec3 normal;
 
-        Intersect(float distancia, vec3 punto, vec3 normall) {
+        Intersect(double distancia, vec3 normall, vec3 punto) {
             distance = distancia;
-            point = punto;
             normal = normall;
-        }
-
-        Intersect() {
-
-        }
-
-        Intersect(float distancia) {
-            distance = distancia;
+            point = punto;
         }
 };
 
 class Light {
-    public: 
+    public:
         vec3 position;
-        float intensity;
+        double intensity;
+        vec3 color;
 
-        Light(vec3 posicion, float intensidad) {
+        Light(vec3 posicion, double intensidad, vec3 colorr) {
             position = posicion;
             intensity = intensidad;
-        }
-
-        Light() {
-
+            color = colorr;
         }
 };
