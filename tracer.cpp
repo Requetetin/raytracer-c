@@ -26,14 +26,15 @@ int width, height;
 double aspectR;
 double zbuffer = numeric_limits<double>::infinity();
 Light light({0, 0, 0}, 0, {0, 0, 0});
-Material currentMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
-Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
+Material currentMaterial({0, 0, 0}, {0, 0, 0, 0}, 0, 0);
+Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0, 0);
 Intersect currentIntersect(0, {0, 0, 0}, {0, 0, 0});
 vector<Sphere> scene;
 vec3 reflectColor = {0, 0, 0};
+vec3 refractColor = {0, 0, 0};
 
 Intersect shadowIntersect(0, {0, 0, 0}, {0, 0, 0});
-Material shadowMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
+Material shadowMaterial({0, 0, 0}, {0, 0, 0, 0}, 0, 0);
 
 double diffuseIntensity;
 double specularIntensity;
@@ -181,6 +182,22 @@ void castRay(vec3 origin, vec3 direction, int recursion) {
     reflectColor = {0, 0, 0};
   }
 
+  if (currentMaterial.albedo[3] > 0) {
+    vec3 refract_dir = refract(direction, currentIntersect.normal, currentMaterial.refractI);
+    if (!vecLength(refract_dir)) {
+      return;
+    }
+    vec3 refract_origin;
+    if (dot(refract_dir, currentIntersect.normal) >= 0) {
+      refract_origin = currentIntersect.point + offset_normal;
+    } else {
+      refract_origin = currentIntersect.point - offset_normal;
+    }
+    castRay(refract_origin, refract_dir, recursion + 1);
+  } else {
+    refractColor = {0, 0, 0};
+  }
+
   diffuseIntensity = light.intensity * std::max(0.f, dot(light_dir, currentIntersect.normal)) * (1 - shadowIntensity);
   
   if (shadowIntensity > 0) {
@@ -193,6 +210,7 @@ void castRay(vec3 origin, vec3 direction, int recursion) {
   vec3 diffuse = currentMaterial.diffuse * (float)diffuseIntensity * currentMaterial.albedo.x;
   vec3 specular = light.color * (float)specularIntensity * currentMaterial.albedo.y;
   vec3 reflection = reflectColor * currentMaterial.albedo.z;
+  vec3 refraction = refractColor * currentMaterial.albedo[3];
 
   vec3 finalColor = diffuse + specular + reflection;
   glColor(finalColor.x, finalColor.y, finalColor.z);
@@ -222,9 +240,9 @@ int main() {
   light.position = {10, 10, 10};
   light.intensity = 1;
   light.color = {255, 255, 255};
-  Material ivory({100, 100, 80}, {0.6, 0.3, 0.1, 0}, 50);
-  Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10);
-  Material mirror({255, 255, 255}, {0, 10, 0.8, 0}, 1500);
+  Material ivory({100, 100, 80}, {0.6, 0.3, 0.1, 0}, 50, 0);
+  Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10, 0);
+  Material mirror({255, 255, 255}, {0, 10, 0.8, 0}, 1500, 0);
 
   Sphere s1({0, -1.5, -10}, 1.5, ivory);
   Sphere s2({-2, 1, -12}, 2, mirror);
