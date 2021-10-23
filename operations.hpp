@@ -89,6 +89,10 @@ class Intersect {
             normal = normall;
             point = punto;
         }
+
+        Intersect() {
+
+        }
 };
 
 class Light {
@@ -101,5 +105,24 @@ class Light {
             position = posicion;
             intensity = intensidad;
             color = colorr;
+        }
+};
+
+class Clash {
+    public:
+        Material material;
+        Intersect intersect;
+
+        Clash(Material m, Intersect i) {
+            material.albedo = m.albedo;
+            material.diffuse = m.diffuse;
+            material.specular = m.specular;
+            intersect.distance = i.distance;
+            intersect.normal = i.normal;
+            intersect.point = i.point;
+        }
+
+        Clash() {
+
         }
 };

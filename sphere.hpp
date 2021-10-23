@@ -41,7 +41,6 @@ class Sphere {
 
       vec3 hit = origin + (direction * (float)t0);
       vec3 normal = norm(hit - center);
-
       return Intersect(t0, normal, hit);
     }
 };

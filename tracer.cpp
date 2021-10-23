@@ -26,13 +26,9 @@ int width, height;
 double aspectR;
 double zbuffer = numeric_limits<double>::infinity();
 Light light({0, 0, 0}, 0, {0, 0, 0});
-Material currentMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
 Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
-Intersect currentIntersect(0, {0, 0, 0}, {0, 0, 0});
+Intersect defaultIntersect(-10000, {0, 0, 0}, {0, 0, 0});
 vector<Sphere> scene;
-
-Intersect shadowIntersect(0, {0, 0, 0}, {0, 0, 0});
-Material shadowMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
 
 double diffuseIntensity;
 double specularIntensity;
@@ -106,77 +102,67 @@ void glInit(int w, int h){
   glClear();
 }
 
-void sceneIntersect(vec3 origin, vec3 direction) {
+Clash* sceneIntersect(vec3 origin, vec3 direction) {
   zbuffer = numeric_limits<double>::infinity();
+  Clash* clash = new Clash(backgroundMaterial, defaultIntersect);
+  Intersect hit;
   for (int i=0; i<scene.size(); i++) {
-    currentIntersect = scene[i].rayIntersect(origin, direction);
-    if (currentIntersect.distance != -10000) {
-      if (currentIntersect.distance < zbuffer) {
-        zbuffer = currentIntersect.distance;
-        currentMaterial = scene[i].material;
-        return;
+    hit = scene[i].rayIntersect(origin, direction);
+    if (hit.distance > -10000) {
+      if (hit.distance < zbuffer) {
+        zbuffer = hit.distance;
+        clash = new Clash(scene[i].material, hit); 
+        //clash.material = scene[i].material;
+        //clash.intersect = hit;
+        //cout << hit.distance << endl;
+        //cout << "1 " << to_string(scene[i].material.diffuse) << endl;
+        //cout << to_string(clash->material.diffuse) << endl;
       }
     }
-   else {
-      currentMaterial.diffuse = backgroundMaterial.diffuse;
-    }
   }
-}
-
-void shadowSceneIntersect(vec3 origin, vec3 direction) {
-  zbuffer = numeric_limits<double>::infinity();
-  for (int i=0; i<scene.size(); i++) {
-    shadowIntersect = scene[i].rayIntersect(origin, direction);
-    if (shadowIntersect.distance != -10000) {
-      if (shadowIntersect.distance < zbuffer) {
-        zbuffer = shadowIntersect.distance;
-        shadowMaterial = scene[i].material;
-        return;
-      }
-    }
-   else {
-      shadowMaterial.diffuse = backgroundMaterial.diffuse;
-    }
-  }
+  //cout << clash->intersect.distance << endl << endl;
+  return clash;
 }
 
 void castRay(vec3 origin, vec3 direction) {
-  sceneIntersect(origin, direction);
-  if (!vecLength(currentMaterial.diffuse)) {
-    glColor(0, 0, 0);
+  Clash* hit = sceneIntersect(origin, direction);
+  
+  if (hit->intersect.distance <= -10000) { //Revisar para fondo!!
+    glColor(backgroundMaterial.diffuse.x, backgroundMaterial.diffuse.y, backgroundMaterial.diffuse.z);
     return;
   }
+  //cout << hit->intersect.distance << endl;
+  vec3 light_dir = norm(light.position - hit->intersect.point);
 
-  vec3 light_dir = norm(light.position - currentIntersect.point);
-
-  vec3 offset_normal = currentIntersect.normal * 1.1f;
+  vec3 offset_normal = hit->intersect.normal * 0.1f;
   vec3 shadow_origin;
-  if (dot(light_dir, currentIntersect.normal) > 0) {
-    shadow_origin = currentIntersect.point + offset_normal;
+  if (dot(light_dir, hit->intersect.normal) > 0) {
+    shadow_origin = hit->intersect.point + offset_normal;
   } else {
-    shadow_origin = currentIntersect.point - offset_normal;
+    shadow_origin = hit->intersect.point - offset_normal;
   }
-  shadowSceneIntersect(shadow_origin, light_dir);
+  Clash* shadowhit = sceneIntersect(shadow_origin, light_dir);
 
-  if (!vecLength(shadowMaterial.diffuse)) {
+  if (shadowhit->intersect.distance <= -10000) {
     shadowIntensity = 0;
   } else {
     shadowIntensity = 0.9;
   }
 
-  diffuseIntensity = light.intensity * std::max(0.f, dot(light_dir, currentIntersect.normal)) * (1 - shadowIntensity);
+  diffuseIntensity = light.intensity * std::max(0.f, dot(light_dir, hit->intersect.normal)) * (1 - shadowIntensity);
   
   if (shadowIntensity > 0) {
     specularIntensity = 0;
   } else {
-    vec3 R = reflect(light_dir, currentIntersect.normal);
-    specularIntensity = light.intensity * pow(std::max(0.f, dot(R, direction)), currentMaterial.specular);
+    vec3 R = reflect(light_dir, hit->intersect.normal);
+    specularIntensity = light.intensity * pow(std::max(0.f, dot(R, direction)), hit->material.specular);
   }
 
-  vec3 diffuse = currentMaterial.diffuse * (float)diffuseIntensity * currentMaterial.albedo.x;
-  vec3 specular = light.color * (float)specularIntensity * currentMaterial.albedo.y;
+  vec3 diffuse = hit->material.diffuse * (float)diffuseIntensity * hit->material.albedo.x;
+  vec3 specular = light.color * (float)specularIntensity * hit->material.albedo.y;
 
   vec3 finalColor = diffuse + specular;
+  //cout << to_string(hit->material.diffuse) << endl;
   glColor(finalColor.x, finalColor.y, finalColor.z);
 }
 
@@ -199,17 +185,17 @@ void glRender() {
 }
 
 int main() {
-  glInit(4056, 4056);
+  glInit(1000, 1000);
 
   light.position = {10, 10, 10};
   light.intensity = 1;
   light.color = {255, 255, 255};
   Material ivory({100, 100, 80}, {0.6, 0.3, 0, 0}, 50);
   Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10);
-  Sphere s1({0, -1.5, -10}, 1.5, ivory);
-  Sphere s2({-2, 1, -12}, 2, rubber);
-  Sphere s3({1, 1, -8}, 1.7, rubber);
-  Sphere s4({0, 5, -20}, 5, ivory);
+  Sphere s1({0, -1.5, -10}, 2, ivory);
+  Sphere s2({-2, 1, -12}, 2, ivory);
+  Sphere s3({1, 1, -7}, 2, rubber);
+  Sphere s4({0, 5, -20}, 2, ivory);
 
   scene.push_back(s1);
   scene.push_back(s2);
