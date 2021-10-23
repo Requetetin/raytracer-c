@@ -60,16 +60,43 @@ vec3 reflect(vec3 I, vec3 N) {
     return norm(I - N * 2.f * dot(N, I));
 }
 
+vec3 refract(vec3 I, vec3 N, double refractIndex) {
+    double cosi = -std::max(-1.f, std::min(1.f, dot(I, N)));
+    double etai = 1;
+    double etat = refractIndex;
+
+    if (cosi < 0) {
+        cosi *= -1;
+        etai = etat;
+        etat = 1;
+        N = N * -1.f;
+    }
+
+    double eta = etai / etat;
+    double k = 1 - pow(eta, 2) * (1 - pow(cosi, 2));
+
+    if (k < 0) {
+        return {0, 0, 0};
+    }
+
+    double cost = sqrt(k);
+    double factor = (eta * cosi) + cost;
+
+    return norm((I * (float)eta) + (N * (float)factor));
+}
+
 class Material {
     public:
         vec3 diffuse;
         vec4 albedo;
         double specular;
+        double refractI;
 
-        Material(vec3 difuso, vec4 albedoo, double specularr) {
+        Material(vec3 difuso, vec4 albedoo, double specularr, double refract_index) {
             diffuse = difuso;
             albedo = albedoo;
             specular = specularr;
+            refractI = refract_index;
         }
 
         Material() {

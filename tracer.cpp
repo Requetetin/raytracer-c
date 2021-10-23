@@ -26,7 +26,7 @@ int width, height;
 double aspectR;
 double zbuffer = numeric_limits<double>::infinity();
 Light light({0, 0, 0}, 0, {0, 0, 0});
-Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0);
+Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0, 0);
 Intersect defaultIntersect(-10000, {0, 0, 0}, {0, 0, 0});
 vector<Sphere> scene;
 
@@ -190,8 +190,8 @@ int main() {
   light.position = {10, 10, 10};
   light.intensity = 1;
   light.color = {255, 255, 255};
-  Material ivory({100, 100, 80}, {0.6, 0.3, 0, 0}, 50);
-  Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10);
+  Material ivory({100, 100, 80}, {0.6, 0.3, 0, 0}, 50, 0);
+  Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10, 0);
   Sphere s1({0, -1.5, -10}, 2, ivory);
   Sphere s2({-2, 1, -12}, 2, ivory);
   Sphere s3({1, 1, -7}, 2, rubber);
