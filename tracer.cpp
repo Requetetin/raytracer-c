@@ -26,13 +26,15 @@ int width, height;
 double aspectR;
 double zbuffer = numeric_limits<double>::infinity();
 Light light({0, 0, 0}, 0, {0, 0, 0});
-Material backgroundMaterial({0, 0, 0}, {0, 0, 0, 0}, 0, 0);
+Material backgroundMaterial({0, 0, 255}, {0, 0, 0, 0}, 0, 0);
 Intersect defaultIntersect(-10000, {0, 0, 0}, {0, 0, 0});
 vector<Sphere> scene;
 
 double diffuseIntensity;
 double specularIntensity;
 double shadowIntensity;
+
+int MAX_RECURSION_DEPTH = 3;
 
 void glVertex(int x, int y){
     framebuffer[y][x][0] = color[2];
@@ -112,31 +114,24 @@ Clash* sceneIntersect(vec3 origin, vec3 direction) {
       if (hit.distance < zbuffer) {
         zbuffer = hit.distance;
         clash = new Clash(scene[i].material, hit); 
-        //clash.material = scene[i].material;
-        //clash.intersect = hit;
-        //cout << hit.distance << endl;
-        //cout << "1 " << to_string(scene[i].material.diffuse) << endl;
-        //cout << to_string(clash->material.diffuse) << endl;
       }
     }
   }
-  //cout << clash->intersect.distance << endl << endl;
   return clash;
 }
 
-void castRay(vec3 origin, vec3 direction) {
+void castRay(vec3 origin, vec3 direction, int recursion) {
   Clash* hit = sceneIntersect(origin, direction);
   
-  if (hit->intersect.distance <= -10000) { //Revisar para fondo!!
+  if (hit->intersect.distance <= -10000 || recursion >= MAX_RECURSION_DEPTH) { //Revisar para fondo!!
     glColor(backgroundMaterial.diffuse.x, backgroundMaterial.diffuse.y, backgroundMaterial.diffuse.z);
     return;
   }
-  //cout << hit->intersect.distance << endl;
   vec3 light_dir = norm(light.position - hit->intersect.point);
 
-  vec3 offset_normal = hit->intersect.normal * 0.1f;
+  vec3 offset_normal = hit->intersect.normal * 0.01f;
   vec3 shadow_origin;
-  if (dot(light_dir, hit->intersect.normal) > 0) {
+  if (dot(light_dir, hit->intersect.normal) >= 0) {
     shadow_origin = hit->intersect.point + offset_normal;
   } else {
     shadow_origin = hit->intersect.point - offset_normal;
@@ -147,6 +142,41 @@ void castRay(vec3 origin, vec3 direction) {
     shadowIntensity = 0;
   } else {
     shadowIntensity = 0.9;
+  }
+
+  vec3 reflect_color;
+  if (hit->material.albedo.z > 0) {
+    vec3 reverse_direction = direction * -1.f;
+    vec3 reflect_direction = reflect(reverse_direction, hit->intersect.normal);
+    vec3 reflect_origin;
+    if (dot(reflect_direction, hit->intersect.normal) >= 0) {
+      reflect_origin = hit->intersect.point + offset_normal;
+    } else {
+      reflect_origin = hit->intersect.point - offset_normal;
+    }
+    castRay(reflect_origin, reflect_direction, recursion + 1);
+    reflect_color = {color[0], color[1], color[2]};
+  } else {
+    reflect_color = {0, 0, 0};
+  }
+
+  vec3 refract_color;
+  if (hit->material.albedo[3] > 0) {
+    vec3 refract_direction = refract(direction, hit->intersect.normal, hit->material.refraction);
+    if (vecLength(refract_direction) == 0) {
+      refract_color = {0, 0, 0};
+    } else {
+      vec3 refract_origin;
+      if (dot(refract_direction, hit->intersect.normal) >= 0) {
+        refract_origin = hit->intersect.point + offset_normal;
+      } else {
+        refract_origin = hit->intersect.point - offset_normal;
+      }
+      castRay(refract_origin, refract_direction, recursion + 1);
+      refract_color = {color[0], color[1], color[2]};
+    }
+  } else {
+    refract_color = {0, 0, 0};
   }
 
   diffuseIntensity = light.intensity * std::max(0.f, dot(light_dir, hit->intersect.normal)) * (1 - shadowIntensity);
@@ -160,9 +190,10 @@ void castRay(vec3 origin, vec3 direction) {
 
   vec3 diffuse = hit->material.diffuse * (float)diffuseIntensity * hit->material.albedo.x;
   vec3 specular = light.color * (float)specularIntensity * hit->material.albedo.y;
+  vec3 reflection = reflect_color * hit->material.albedo.z;
+  vec3 refraction = refract_color * hit->material.albedo[3];
 
-  vec3 finalColor = diffuse + specular;
-  //cout << to_string(hit->material.diffuse) << endl;
+  vec3 finalColor = diffuse + specular + reflection + refraction;
   glColor(finalColor.x, finalColor.y, finalColor.z);
 }
 
@@ -178,7 +209,7 @@ void glRender() {
       double j = (1 - 2 * ((y + 0.5) / height)) * angle;
 
       direction = norm({i, j, -1});
-      castRay({0, 0, 0}, direction);
+      castRay({0, 0, 0}, direction, 0);
       glVertex(x, y);
     }
   }
@@ -187,15 +218,18 @@ void glRender() {
 int main() {
   glInit(1000, 1000);
 
-  light.position = {10, 10, 10};
+  light.position = {10, 10, 20};
   light.intensity = 1;
   light.color = {255, 255, 255};
-  Material ivory({100, 100, 80}, {0.6, 0.3, 0, 0}, 50, 0);
+  Material ivory({100, 100, 80}, {0.6, 0.3, 0.1, 0}, 50, 0);
   Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10, 0);
-  Sphere s1({0, -1.5, -10}, 2, ivory);
-  Sphere s2({-2, 1, -12}, 2, ivory);
-  Sphere s3({1, 1, -7}, 2, rubber);
-  Sphere s4({0, 5, -20}, 2, ivory);
+  Material mirror({255, 255, 255}, {0, 10, 0.8, 0}, 1500, 0);
+  Material glass({255, 255, 255}, {0, 0.5, 0.1, 0.8}, 150, 1.5);
+
+  Sphere s1({0, -1.5, -10}, 1.5, ivory);
+  Sphere s2({-2, 1, -12}, 2, glass);
+  Sphere s3({1, 1, -8}, 1.7, rubber);
+  Sphere s4({0, 5, -20}, 5, mirror);
 
   scene.push_back(s1);
   scene.push_back(s2);
