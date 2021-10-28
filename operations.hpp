@@ -57,7 +57,7 @@ vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 }
 
 vec3 reflect(vec3 I, vec3 N) {
-    return norm(I - N * 2.f * dot(N, I));
+    return norm(I * -1.f - N * 2.f * dot(I * -1.f, N));
 }
 
 vec3 refract(vec3 I, vec3 N, double refract_index) {
