@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "operations.hpp"
+#include "object.hpp"
 #include "sphere.hpp"
 #define byte uint8_t
 using namespace std;
@@ -28,7 +29,7 @@ double zbuffer = numeric_limits<double>::infinity();
 Light light({0, 0, 0}, 0, {0, 0, 0});
 Material backgroundMaterial({0, 0, 255}, {0, 0, 0, 0}, 0, 0);
 Intersect defaultIntersect(-10000, {0, 0, 0}, {0, 0, 0});
-vector<Sphere> scene;
+vector<Figura> scene;
 
 int MAX_RECURSION_DEPTH = 3;
 

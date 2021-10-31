@@ -3,7 +3,7 @@
 using namespace glm;
 using namespace std;
 
-class Sphere {
+class Sphere : public Figura {
   public: 
     vec3 center;
     double radius;
