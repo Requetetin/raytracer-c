@@ -5,7 +5,7 @@ using namespace std;
 
 class Figura {
   public:
-    Material material;
+    Material* material;
     
     virtual Intersect rayIntersect(vec3 origin, vec3 direction) {return Intersect(-10000, {0, 0, 0}, {0, 0, 0});};
     virtual ~Figura() {}

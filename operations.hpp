@@ -137,12 +137,8 @@ class Clash {
         Intersect intersect;
 
         Clash(Material m, Intersect i) {
-            material.albedo = m.albedo;
-            material.diffuse = m.diffuse;
-            material.specular = m.specular;
-            intersect.distance = i.distance;
-            intersect.normal = i.normal;
-            intersect.point = i.point;
+            material = m;
+            intersect = i;
         }
 
         Clash() {

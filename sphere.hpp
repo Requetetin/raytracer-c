@@ -7,14 +7,12 @@ class Sphere : public Figura {
   public: 
     vec3 center;
     double radius;
-    Material material;
+    Material* material;
 
-    Sphere(vec3 centro, double radio, Material m) {
+    Sphere(vec3 centro, double radio, Material* m) {
       center = centro;
       radius = radio;
-      material.diffuse = m.diffuse;
-      material.albedo = m.albedo;
-      material.specular = m.specular;
+      material = m;
     }
 
     Intersect rayIntersect(vec3 origin, vec3 direction) {

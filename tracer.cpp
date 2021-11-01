@@ -27,9 +27,9 @@ int width, height;
 double aspectR;
 double zbuffer = numeric_limits<double>::infinity();
 Light light({0, 0, 0}, 0, {0, 0, 0});
-Material backgroundMaterial({0, 0, 255}, {0, 0, 0, 0}, 0, 0);
+Material* backgroundMaterial = new Material({0, 0, 255}, {0, 0, 0, 0}, 0, 0);
 Intersect defaultIntersect(-10000, {0, 0, 0}, {0, 0, 0});
-vector<Figura> scene;
+vector<Figura*> scene;
 
 int MAX_RECURSION_DEPTH = 3;
 
@@ -103,14 +103,15 @@ void glInit(int w, int h){
 
 Clash* sceneIntersect(vec3 origin, vec3 direction) {
   zbuffer = numeric_limits<double>::infinity();
-  Clash* clash = new Clash(backgroundMaterial, defaultIntersect);
+  Clash* clash = new Clash(*backgroundMaterial, defaultIntersect);
   Intersect hit;
   for (int i=0; i<scene.size(); i++) {
-    hit = scene[i].rayIntersect(origin, direction);
+    hit = scene[i]->rayIntersect(origin, direction);
     if (hit.distance > -10000) {
       if (hit.distance < zbuffer) {
         zbuffer = hit.distance;
-        clash = new Clash(scene[i].material, hit); 
+        Material* temp = scene[i]->material;
+        clash = new Clash(*temp, hit); 
       }
     }
   }
@@ -123,9 +124,10 @@ vec3 castRay(vec3 origin, vec3 direction, int recursion) {
   double specularIntensity;
   double shadowIntensity;
   
-  if (hit->intersect.distance <= -10000 || recursion > MAX_RECURSION_DEPTH) { //Revisar para fondo!!
-    return backgroundMaterial.diffuse;
+  if (hit->intersect.distance <= -10000 || recursion > MAX_RECURSION_DEPTH) {
+    return backgroundMaterial->diffuse;
   }
+  //cout << to_string(hit->material.diffuse) << endl;
   vec3 light_dir = norm(light.position - hit->intersect.point);
 
   vec3 offset_normal = hit->intersect.normal * 0.1f;
@@ -214,25 +216,25 @@ void glRender() {
 }
 
 int main() {
-  glInit(4056, 4056);
+  glInit(1000, 1000);
 
   light.position = {10, 10, 20};
   light.intensity = 1;
   light.color = {255, 255, 255};
-  Material ivory({100, 100, 80}, {0.9, 0.3, 0.1, 0}, 50, 0);
-  Material rubber({80, 0, 0}, {0.9, 0.1, 0, 0}, 10, 0);
-  Material mirror({255, 255, 255}, {0, 10, 0.8, 0}, 1500, 0);
-  Material glass({255, 255, 255}, {0, 0.5, 0.1, 0.8}, 150, 1.5);
+  Material* ivory = new Material({100, 100, 80}, {0.9, 0.3, 0.1, 0}, 50, 0);
+  Material* rubber = new Material({80, 0, 0}, {0.9, 0.1, 0, 0}, 10, 0);
+  Material* mirror = new Material({255, 255, 255}, {0, 10, 0.8, 0}, 1500, 0);
+  Material* glass = new Material({255, 255, 255}, {0, 0.5, 0.1, 0.8}, 150, 1.5);
 
-  Sphere s1({0, -1.5, -10}, 1.5, ivory);
-  Sphere s2({-2, 1, -12}, 2, glass);
-  Sphere s3({1, 1, -7}, 1.7, rubber);
-  Sphere s4({0, 5, -20}, 5, mirror);
+  Figura* s1 = new Sphere({0, -1.5, -10}, 1.5, ivory);
+  Figura* s2 = new Sphere({-2, 1, -12}, 2, glass);
+  Figura* s3 = new Sphere({1, 1, -7}, 1.7, rubber);
+  Figura* s4 = new Sphere({0, 5, -20}, 5, mirror);
 
-  scene.push_back(s1);
-  scene.push_back(s2);
+  //scene.push_back(s1);
+  //scene.push_back(s2);
   scene.push_back(s3);
-  scene.push_back(s4);
+  //scene.push_back(s4);
   
   
   glRender();
