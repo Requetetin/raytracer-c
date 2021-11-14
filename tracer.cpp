@@ -233,21 +233,78 @@ int main() {
   Figura* s3 = new Sphere({1, 1, -7}, 1.7, rubber);
   Figura* s4 = new Sphere({0, 5, -20}, 5, mirror);
 
-  scene.push_back(s1);
+  /*scene.push_back(s1);
   scene.push_back(s2);
   scene.push_back(s3);
-  scene.push_back(s4);
+  scene.push_back(s4);*/
 
   Plane* p1 = new Plane({0, 0, -10}, {1, 1, -1}, ivory);
 
   //scene.push_back(p1);
 
-  Figura* c1 = new Cube({-3, -5, 5}, {3, -2, 4}, ivory);
-
+  //R
+  /*Figura* c1 = new Cube({6, 6, 7}, {5, 1, 8}, ivory);
+  Figura* c2 = new Cube({3, 6, 7}, {5, 5, 8}, ivory);
+  Figura* c3 = new Cube({3, 4, 7}, {5, 3, 8}, ivory);
+  Figura* c4 = new Cube({3, 4, 7}, {4, 5, 8}, ivory);
+  Figura* c5 = new Cube({5, 3, 7}, {4, 2, 8}, ivory);
+  Figura* c6 = new Cube({3, 2, 7}, {4, 1, 8}, ivory);
   scene.push_back(c1);
-  //scene.push_back(c2);
+  scene.push_back(c2);
+  scene.push_back(c3);
+  scene.push_back(c4);
+  scene.push_back(c5);
+  scene.push_back(c6);*/
+
+  //A
+  /*Figura* c7 = new Cube({2, 1, 7}, {1, 6, 8}, ivory);
+  Figura* c8 = new Cube({0, 1, 7}, {-1, 6, 8}, ivory);
+  Figura* c9 = new Cube({0, 5, 7}, {1, 6, 8}, ivory);
+  Figura* c10 = new Cube({0, 4, 7}, {1, 3, 8}, ivory);
+  scene.push_back(c7);
+  scene.push_back(c8);
+  scene.push_back(c9);
+  scene.push_back(c10);*/
+
+  //Y
+  /*Figura* c11 = new Cube({-2, 5, 7}, {-3, 6, 8}, ivory);
+  Figura* c12 = new Cube({-6, 5, 7}, {-7, 6, 8}, ivory);
+  Figura* c13 = new Cube({-3, 5, 7}, {-4, 4, 8}, ivory);
+  Figura* c14 = new Cube({-6, 5, 7}, {-5, 4, 8}, ivory);
+  Figura* c15 = new Cube({-4, 4, 7}, {-5, 1, 8}, ivory);
+  scene.push_back(c11);
+  scene.push_back(c12);
+  scene.push_back(c13);
+  scene.push_back(c14);
+  scene.push_back(c15);*/
+
+  //C
+  /*Figura* c16 = new Cube({6, -6, 7}, {5, -1, 8}, ivory);
+  Figura* c17 = new Cube({5, -6, 7}, {3, -5, 8}, ivory);
+  Figura* c18 = new Cube({3, -2, 7}, {5, -1, 8}, ivory);
+  scene.push_back(c16);
+  scene.push_back(c17);
+  scene.push_back(c18);*/
+
+  //+
+  Figura* c19 = new Cube({1, -5, 7}, {0, -2, 8}, ivory);
+  Figura* c20 = new Cube({2, -4, 7}, {1, -3, 8}, ivory);
+  Figura* c21 = new Cube({0, -4, 7}, {-1, -3, 8}, ivory);
+  scene.push_back(c19);
+  scene.push_back(c20);
+  scene.push_back(c21);
+  Figura* c22 = new Cube({-3, -5, 7}, {-4, -2, 8}, ivory);
+  Figura* c23 = new Cube({-2, -4, 7}, {-3, -3, 8}, ivory);
+  Figura* c24 = new Cube({-4, -4, 7}, {-5, -3, 8}, ivory);
+  scene.push_back(c22);
+  scene.push_back(c23);
+  scene.push_back(c24);
   
-  
+  /*
+    Trate de escribir RAY C++
+    Pero solo renderiza una sola letra
+    O los dos signos + 
+  */
   glRender();
   glFinish();
   cout << "done" << endl;
