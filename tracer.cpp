@@ -7,6 +7,8 @@
 #include "operations.hpp"
 #include "object.hpp"
 #include "sphere.hpp"
+#include "plane.hpp"
+#include "cube.hpp"
 #define byte uint8_t
 using namespace std;
 using namespace glm;
@@ -231,10 +233,19 @@ int main() {
   Figura* s3 = new Sphere({1, 1, -7}, 1.7, rubber);
   Figura* s4 = new Sphere({0, 5, -20}, 5, mirror);
 
-  //scene.push_back(s1);
-  //scene.push_back(s2);
+  scene.push_back(s1);
+  scene.push_back(s2);
   scene.push_back(s3);
-  //scene.push_back(s4);
+  scene.push_back(s4);
+
+  Plane* p1 = new Plane({0, 0, -10}, {1, 1, -1}, ivory);
+
+  //scene.push_back(p1);
+
+  Figura* c1 = new Cube({-3, -5, 5}, {3, -2, 4}, ivory);
+
+  scene.push_back(c1);
+  //scene.push_back(c2);
   
   
   glRender();
