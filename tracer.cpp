@@ -243,7 +243,7 @@ int main() {
   //scene.push_back(p1);
 
   //R
-  /*Figura* c1 = new Cube({6, 6, 7}, {5, 1, 8}, ivory);
+  Figura* c1 = new Cube({6, 6, 7}, {5, 1, 8}, ivory);
   Figura* c2 = new Cube({3, 6, 7}, {5, 5, 8}, ivory);
   Figura* c3 = new Cube({3, 4, 7}, {5, 3, 8}, ivory);
   Figura* c4 = new Cube({3, 4, 7}, {4, 5, 8}, ivory);
@@ -254,7 +254,7 @@ int main() {
   scene.push_back(c3);
   scene.push_back(c4);
   scene.push_back(c5);
-  scene.push_back(c6);*/
+  scene.push_back(c6);
 
   //A
   /*Figura* c7 = new Cube({2, 1, 7}, {1, 6, 8}, ivory);
@@ -287,7 +287,7 @@ int main() {
   scene.push_back(c18);*/
 
   //+
-  Figura* c19 = new Cube({1, -5, 7}, {0, -2, 8}, ivory);
+  /*Figura* c19 = new Cube({1, -5, 7}, {0, -2, 8}, ivory);
   Figura* c20 = new Cube({2, -4, 7}, {1, -3, 8}, ivory);
   Figura* c21 = new Cube({0, -4, 7}, {-1, -3, 8}, ivory);
   scene.push_back(c19);
@@ -298,7 +298,7 @@ int main() {
   Figura* c24 = new Cube({-4, -4, 7}, {-5, -3, 8}, ivory);
   scene.push_back(c22);
   scene.push_back(c23);
-  scene.push_back(c24);
+  scene.push_back(c24);*/
   
   /*
     Trate de escribir RAY C++
